@@ -1,0 +1,471 @@
+------------------------------------ HOL UP ------------------------------------
+repeat wait() until game:IsLoaded()
+local LoadingTime = tick();
+
+LPH_NO_VIRTUALIZE = function(a) return a end
+LPH_NO_UPVALUES = function(a) return a end
+------------------------------------ REPO ------------------------------------
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+------------------------------------ LINKS ------------------------------------
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+Library:Notify('Loading UI...');
+wait(3)
+------------------------------------ WINDOW -----------------------------------
+local Window = Library:CreateWindow({
+    Title = 'counter noob',
+    Center = true, 
+    AutoShow = true,
+})
+------------------------------------ TABS ------------------------------------
+local Tabs = {
+    Legitbot = Window:AddTab('Aimbot'), 
+    Visuals = Window:AddTab('Visuals'),
+    Misc = Window:AddTab('Misc'),
+    ['UI Settings'] = Window:AddTab('Settings'),
+}
+------------------------------------ SECTIONS ------------------------------------
+local AimbotSec1 = Tabs.Legitbot:AddLeftGroupbox('Bullet Redirection')
+local AimbotSec2 = Tabs.Legitbot:AddRightGroupbox('Aim Assist')
+
+local ESPTabbox = Tabs.Visuals:AddLeftTabbox()
+local ESPTab  = ESPTabbox:AddTab('ESP')
+local ESPSTab = Tabs.Visuals:AddLeftGroupbox('ESP Settings')
+local LocalTab = ESPTabbox:AddTab('Local')
+
+local CameraTabbox = Tabs.Visuals:AddRightTabbox()
+local CamTab  = CameraTabbox:AddTab('Client')
+local VWTab = CameraTabbox:AddTab('Viewmodel')
+
+local MiscTabbox = Tabs.Visuals:AddRightTabbox()
+local WRLTab  = MiscTabbox:AddTab('World')
+local MiscTab  = MiscTabbox:AddTab('Misc')
+local ArmsTab = MiscTabbox:AddTab('Self')
+local BulletsTab = MiscTabbox:AddTab('Bullet')
+local MiscESPTab = Tabs.Visuals:AddLeftGroupbox('Misc ESP')
+
+local MiscSec1 = Tabs.Misc:AddLeftGroupbox('Main')
+local MiscSec2 = Tabs.Misc:AddLeftGroupbox('Movement')
+local MiscSec3 = Tabs.Misc:AddRightGroupbox('Tweaks')
+local MiscSec4 = Tabs.Misc:AddRightGroupbox('Hit')
+local MiscSec5 = Tabs.Misc:AddRightGroupbox('Others')
+local MiscSec6 = Tabs.Misc:AddLeftGroupbox('Gun Mods')
+
+local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
+------------------------------------ VARS ------------------------------------
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local currentCamera = workspace.CurrentCamera
+local guiService = game:GetService("GuiService")
+local runService = game:GetService("RunService")
+local lighting = game.Lighting
+local mouse = localPlayer:GetMouse()
+local userInput = game:GetService('UserInputService')
+local TweenService = game:GetService("TweenService")
+local rayignore = workspace.Ray_Ignore
+local CNew, CF, C3, Vec2, Vec3 = ColorSequence.new, CFrame.new, Color3.fromRGB, Vector2.new, Vector3.new
+local GetPlayers = players.GetPlayers
+local cbClient = getsenv(localPlayer.PlayerGui:WaitForChild("Client"))
+
+local saturationeffect = Instance.new("ColorCorrectionEffect", currentCamera)
+saturationeffect.Enabled = false
+local Blur = Instance.new("BlurEffect", currentCamera)
+Blur.Enabled = false
+
+local bullettracerstexture = 446111271
+local armschamstexture = 414144526
+local weaponchamstexture = 414144526
+local retardarmschams = C3(255, 0, 0)
+
+local ebCooldown = false
+local oldState = Enum.HumanoidStateType.None
+local ebenabled = false
+local ebsfx = 6887181639
+local timeout = 0
+local ebcount = 0
+local graphLines = {}
+local lastPos = currentCamera.ViewportSize.Y-90
+
+local HitSoundType = 5633695679
+local KillSoundType = 5902468562
+------------------------------------ GUI STUFF ------------------------------------
+local watermark = Instance.new("ScreenGui")
+local ScreenLabel = Instance.new("Frame")
+local WatermarkColor = Instance.new("Frame")
+local UIGradient = Instance.new("UIGradient")
+local Container = Instance.new("Frame")
+local UIPadding = Instance.new("UIPadding")
+local Text = Instance.new("TextLabel")
+local Background = Instance.new("Frame")
+
+watermark.Name = "watermark"
+watermark.Parent = game.CoreGui
+watermark.Enabled = false
+
+ScreenLabel.Name = "ScreenLabel"
+ScreenLabel.Parent = watermark
+ScreenLabel.BackgroundColor3 = C3(28, 28, 28)
+ScreenLabel.BackgroundTransparency = 1.000
+ScreenLabel.BorderColor3 = C3(20, 20, 20)
+ScreenLabel.Position = UDim2.new(0, 12, 0, 7)
+ScreenLabel.Size = UDim2.new(0, 260, 0, 20)
+
+WatermarkColor.Name = "Color"
+WatermarkColor.Parent = ScreenLabel
+WatermarkColor.BackgroundColor3 = C3(0, 89, 149)
+WatermarkColor.BorderSizePixel = 0
+WatermarkColor.Size = UDim2.new(0.534260333, 0, 0, 2)
+WatermarkColor.ZIndex = 2
+
+UIGradient.Color = CNew{ColorSequenceKeypoint.new(0.00, C3(255, 255, 255)), ColorSequenceKeypoint.new(1.00, C3(60, 60, 60))}
+UIGradient.Rotation = 90
+UIGradient.Parent = WatermarkColor
+
+Container.Name = "Container"
+Container.Parent = ScreenLabel
+Container.BackgroundTransparency = 1.000
+Container.BorderSizePixel = 0
+Container.Position = UDim2.new(0, 0, 0, 4)
+Container.Size = UDim2.new(1, 0, 0, 14)
+Container.ZIndex = 3
+
+UIPadding.Parent = Container
+UIPadding.PaddingLeft = UDim.new(0, 4)
+
+Text.Name = "Text"
+Text.Parent = Container
+Text.BackgroundTransparency = 1.000
+Text.Position = UDim2.new(0.0230768919, 0, 0, 0)
+Text.Size = UDim2.new(0.48046875, 0, 1, 0)
+Text.ZIndex = 4
+Text.Font = Enum.Font.RobotoMono
+Text.Text = "pepsi.club | user"
+Text.TextColor3 = C3(65025, 65025, 65025)
+Text.TextSize = 14.000
+Text.TextStrokeTransparency = 0.000
+Text.TextXAlignment = Enum.TextXAlignment.Left
+
+Background.Name = "Background"
+Background.Parent = ScreenLabel
+Background.BackgroundColor3 = C3(23, 23, 23)
+Background.BorderColor3 = C3(20, 20, 20)
+Background.Size = UDim2.new(0.534260333, 0, 1, 0)
+
+local function ZWWNPAB_fake_script() -- ScreenLabel.LocalScript 
+	local script = Instance.new('LocalScript', ScreenLabel)
+
+	local gui = script.Parent
+	gui.Draggable = true
+	gui.Active = true
+end
+coroutine.wrap(ZWWNPAB_fake_script)()
+
+local SpectatorViewer = Instance.new("ScreenGui")
+local Main = Instance.new("Frame")
+local Spectators = Instance.new("TextLabel")
+local Background = Instance.new("Frame")
+local UIGradient = Instance.new("UIGradient")
+local SpectColor = Instance.new("Frame")
+local UIGradient_2 = Instance.new("UIGradient")
+local Frame = Instance.new("Frame")
+local Example = Instance.new("TextLabel")
+local UIListLayout = Instance.new("UIListLayout")
+
+SpectatorViewer.Name = "SpectatorViewer"
+SpectatorViewer.Parent = game.CoreGui
+
+Main.Name = "Main"
+Main.Parent = SpectatorViewer
+Main.BackgroundColor3 = C3(23, 23, 23)
+Main.BackgroundTransparency = 1.000
+Main.BorderColor3 = C3(20, 20, 20)
+Main.Position = UDim2.new(0.00779589033, 0, 0.400428265, 0)
+Main.Size = UDim2.new(0, 153, 0, 20)
+Main.Visible = true
+
+Spectators.Name = "Spectators"
+Spectators.Parent = Main
+Spectators.BackgroundTransparency = 1.000
+Spectators.Size = UDim2.new(1, 0, 1, 0)
+Spectators.ZIndex = 4
+Spectators.Font = Enum.Font.RobotoMono
+Spectators.Text = " Spectators"
+Spectators.TextColor3 = C3(255, 255, 255)
+Spectators.TextSize = 15.000
+Spectators.TextStrokeTransparency = 0.000
+Spectators.TextXAlignment = Enum.TextXAlignment.Left
+
+Background.Name = "Background"
+Background.Parent = Main
+Background.BackgroundColor3 = C3(45, 45, 45)
+Background.BorderColor3 = C3(20, 20, 20)
+Background.Size = UDim2.new(1.00657892, 0, 1, 0)
+Background.BorderSizePixel = 0  
+
+UIGradient.Color = CNew{ColorSequenceKeypoint.new(0.00, C3(255, 255, 255)), ColorSequenceKeypoint.new(1.00, C3(112, 112, 112))}
+UIGradient.Rotation = 90
+UIGradient.Parent = Background
+
+SpectColor.Name = "Color"
+SpectColor.Parent = Main
+SpectColor.BackgroundColor3 = C3(255, 0, 0)
+SpectColor.BorderSizePixel = 0
+SpectColor.Position = UDim2.new(0, 1, 0, 1)
+SpectColor.Size = UDim2.new(0.991, 0, 0, 2)
+SpectColor.ZIndex = 2
+
+UIGradient_2.Color = CNew{ColorSequenceKeypoint.new(0.00, C3(255, 255, 255)), ColorSequenceKeypoint.new(1.00, C3(60, 60, 60))}
+UIGradient_2.Rotation = 90
+UIGradient_2.Parent = SpectColor
+
+Frame.Parent = Main
+Frame.BackgroundColor3 = C3(7, 7, 7)
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0, 0, 1, 0)
+Frame.Size = UDim2.new(0, 153, 0, 1)
+
+Example.Name = "Example"
+Example.Parent = Frame
+Example.BackgroundColor3 = C3(22, 22, 22)
+Example.BorderSizePixel = 0
+Example.Position = UDim2.new(-0.00653594732, 0, 1, 0)
+Example.Size = UDim2.new(0, 156, 0, 20)
+Example.Font = Enum.Font.RobotoMono
+Example.Text = "Name"
+Example.Visible = false
+Example.TextColor3 = C3(255, 255, 255)
+Example.TextSize = 13.000
+Example.TextXAlignment = Enum.TextXAlignment.Left
+
+UIListLayout.Parent = Frame
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function spectlist()
+	local script = Instance.new('LocalScript', Frame)
+
+	local function GetSpectators()
+		local CurrentSpectators = {}
+		for i,v in pairs(game:GetService("Players"):GetChildren()) do 
+			if v ~= game:GetService("Players").LocalPlayer and not v.Character and v:FindFirstChild("CameraCF") and (v.CameraCF.Value.Position - workspace.CurrentCamera.CFrame.p).Magnitude < 10 then 
+				table.insert(CurrentSpectators, #CurrentSpectators+1, v)
+			end
+		end
+		return CurrentSpectators
+	end
+	
+	while wait(0.05) do
+		for i,v in next, script.Parent:GetChildren() do
+			if v.Name ~= "Example" and not v:IsA("UIListLayout") and not v:IsA("LocalScript") then
+				v:Destroy()
+			end
+		end
+		for i,v in next, GetSpectators() do
+			local new = script.Parent.Example:Clone()
+			new.Parent = script.Parent
+			new.Visible = true
+			new.ZIndex = 5
+			new.Name = v.Name
+			new.Text = " ".. v.Name
+			new.TextSize = 13
+			new.Size = UDim2.new(0, 154,0, 20)
+			new.Font = Enum.Font.RobotoMono
+			new.BackgroundColor3 = C3(20, 20, 20)
+			new.TextColor3 = C3(225, 225, 225)
+			new.TextStrokeTransparency = 0
+		end
+	end
+	
+end
+coroutine.wrap(spectlist)()
+
+local keystrokesGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local W = Instance.new("TextLabel")
+local S = Instance.new("TextLabel")
+local A = Instance.new("TextLabel")
+local D = Instance.new("TextLabel")
+local E = Instance.new("TextLabel")
+local R = Instance.new("TextLabel")
+local Space = Instance.new("TextLabel")
+
+keystrokesGui.Parent = game.CoreGui
+keystrokesGui.Name = "keystrokess"
+keystrokesGui.Enabled = false
+
+Frame.Parent = keystrokesGui
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Frame.BackgroundTransparency = 1.000
+Frame.Position = UDim2.new(0.453987718, 0, 0.738977075, 0)
+Frame.Size = UDim2.new(0, 72, 0, 75)
+
+W.Name = "W"
+W.Parent = Frame
+W.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+W.BackgroundTransparency = 1.000
+W.Position = UDim2.new(0.287764132, 0, -0.0102292299, 0)
+W.Size = UDim2.new(0, 29, 0, 28)
+W.Font = Enum.Font.Code
+W.Text = "_"
+W.TextColor3 = Color3.fromRGB(255, 255, 255)
+W.TextSize = 14.000
+W.TextStrokeTransparency = 0.000
+
+S.Name = "S"
+S.Parent = Frame
+S.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+S.BackgroundTransparency = 1.000
+S.Position = UDim2.new(0.287764132, 0, 0.35915342, 0)
+S.Size = UDim2.new(0, 29, 0, 28)
+S.Font = Enum.Font.Code
+S.Text = "_"
+S.TextColor3 = Color3.fromRGB(255, 255, 255)
+S.TextSize = 14.000
+S.TextStrokeTransparency = 0.000
+
+A.Name = "A"
+A.Parent = Frame
+A.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+A.BackgroundTransparency = 1.000
+A.Position = UDim2.new(-0.0950409099, 0, 0.35915345, 0)
+A.Size = UDim2.new(0, 29, 0, 28)
+A.Font = Enum.Font.Code
+A.Text = "_"
+A.TextColor3 = Color3.fromRGB(255, 255, 255)
+A.TextSize = 14.000
+A.TextStrokeTransparency = 0.000
+
+D.Name = "D"
+D.Parent = Frame
+D.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+D.BackgroundTransparency = 1.000
+D.Position = UDim2.new(0.684458077, 0, 0.35915342, 0)
+D.Size = UDim2.new(0, 29, 0, 28)
+D.Font = Enum.Font.Code
+D.Text = "_"
+D.TextColor3 = Color3.fromRGB(255, 255, 255)
+D.TextSize = 14.000
+D.TextStrokeTransparency = 0.000
+
+E.Name = "E"
+E.Parent = Frame
+E.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+E.BackgroundTransparency = 1.000
+E.Position = UDim2.new(-0.0950409099, 0, -0.0102293491, 0)
+E.Size = UDim2.new(0, 29, 0, 28)
+E.Font = Enum.Font.Code
+E.Text = "_"
+E.TextColor3 = Color3.fromRGB(255, 255, 255)
+E.TextSize = 14.000
+E.TextStrokeTransparency = 0.000
+
+R.Name = "R"
+R.Parent = Frame
+R.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+R.BackgroundTransparency = 1.000
+R.Position = UDim2.new(0.683231115, 0, -0.0102292895, 0)
+R.Size = UDim2.new(0, 29, 0, 28)
+R.Font = Enum.Font.Code
+R.Text = "_"
+R.TextColor3 = Color3.fromRGB(255, 255, 255)
+R.TextSize = 14.000
+R.TextStrokeTransparency = 0.000
+
+Space.Name = "Space"
+Space.Parent = Frame
+Space.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Space.BackgroundTransparency = 1.000
+Space.Position = UDim2.new(-0.104209319, 0, 0.620387971, 0)
+Space.Size = UDim2.new(0, 87, 0, 28)
+Space.Font = Enum.Font.Code
+Space.Text = "_"
+Space.TextColor3 = Color3.fromRGB(255, 255, 255)
+Space.TextSize = 14.000
+Space.TextStrokeTransparency = 0.000
+
+-- Scripts:
+
+local function SJBA_fake_script() -- Frame.LocalScript 
+    local script = Instance.new('LocalScript', Frame)
+    local gui = script.Parent
+    gui.Draggable = true
+    gui.Active = true
+end
+coroutine.wrap(SJBA_fake_script)()
+
+local function UTCCBQ_fake_script() -- Frame.LocalScript 
+    local script = Instance.new('LocalScript', Frame)
+    local UIS = game:GetService("UserInputService")
+    local Sp = script.Parent.Space
+    local W = script.Parent.W
+    local A = script.Parent.A
+    local S = script.Parent.S
+    local D = script.Parent.D
+    local E = script.Parent.E
+    local R = script.Parent.R
+	
+    UIS.InputBegan:Connect(function(key)
+        if key.KeyCode == Enum.KeyCode.W then
+            W.Text = "W"
+        elseif key.KeyCode == Enum.KeyCode.A then
+            A.Text = "A"
+        elseif key.KeyCode == Enum.KeyCode.S then
+            S.Text = "S"
+        elseif key.KeyCode == Enum.KeyCode.D then
+            D.Text = "D"
+        elseif key.KeyCode == Enum.KeyCode.E then
+            E.Text = "E"
+        elseif key.KeyCode == Enum.KeyCode.R then
+            R.Text = "R"
+        elseif key.KeyCode == Enum.KeyCode.Space then
+            Sp.Text = "Space"
+        end
+    end)
+    
+    UIS.InputEnded:Connect(function(key)
+        if key.KeyCode == Enum.KeyCode.W then
+            W.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.A then
+            A.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.S then
+            S.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.D then
+            D.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.E then
+            E.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.R then
+            R.Text = "_"
+        elseif key.KeyCode == Enum.KeyCode.Space then
+            Sp.Text = "_"
+            end
+        end)
+    end
+coroutine.wrap(UTCCBQ_fake_script)()
+
+local ebtxt = Drawing.new("Text");ebtxt.Text = "EB";ebtxt.Center = true;ebtxt.Outline = true;ebtxt.Color = C3(255, 255, 255);ebtxt.Font = 3;ebtxt.Position = Vec2(currentCamera.ViewportSize.X / 2, currentCamera.ViewportSize.Y - 80);ebtxt.Size = 18;ebtxt.Visible = false;
+local ebcounter = Drawing.new("Text");ebcounter.Text = "eb: "..ebcount.."";ebcounter.Center = true;ebcounter.Outline = true;ebcounter.Color = C3(255, 255, 255);ebcounter.Font = 3;ebcounter.Position = Vec2(currentCamera.ViewportSize.X / 2, currentCamera.ViewportSize.Y - 50);ebcounter.Size = 18;ebcounter.Visible = false
+local VelocityCounter = Drawing.new("Text");VelocityCounter.Text = "";VelocityCounter.Center = true;VelocityCounter.Outline = true;VelocityCounter.Color = Color3.new(1,1,1);VelocityCounter.Font = 3;VelocityCounter.Position = Vec2(currentCamera.ViewportSize.X/2, currentCamera.ViewportSize.Y-70);VelocityCounter.Size = 20;VelocityCounter.Visible = false
+------------------------------------ MAIN FUNCS ------------------------------------
+local function IsAlive(plr)
+	if plr and plr.Character and plr.Character.FindFirstChild(plr.Character, "Humanoid") and plr.Character.Humanoid.Health > 0 then
+		return true
+	end
+
+	return false
+end
+
+function isButtonDown(key)
+    if string.find(tostring(key),"KeyCode") then
+        return game:GetService("UserInputService"):IsKeyDown(key) 
+    else
+        for _,v in pairs(game:GetService("UserInputService"):GetMouseButtonsPressed()) do
+            if v.UserInputType == key then
+                return true
+            end
+        end
+    end
+	return false
+end
